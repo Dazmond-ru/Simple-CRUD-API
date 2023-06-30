@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start:dev": "npx nodemon ./src/server.ts",
+    "start:dev": "npx nodemon ./src/cluster.ts",
     "start:prod": "webpack && node ./bundle/server.js"
   },
   "repository": {

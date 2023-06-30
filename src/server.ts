@@ -1,4 +1,3 @@
-import * as dotenv from 'dotenv'
 import http from 'http'
 import {
   addUser,
@@ -8,10 +7,6 @@ import {
   updateUser,
 } from './data/users'
 import { Methods, StatusCodes, User, UserResponse } from './types'
-
-dotenv.config()
-
-const port = Number(process.env.PORT) || 5000
 
 const USERS_URL = '/api/users'
 const USER_DETAILS_URL = '/api/users/'
@@ -40,7 +35,7 @@ const writeErrorResponse = (
   res.end()
 }
 
-const server = http.createServer()
+export const server = http.createServer()
 
 server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
   try {
@@ -109,8 +104,4 @@ server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
     )
     res.end()
   }
-})
-
-server.listen(port, 'localhost', () => {
-  console.log(`Listening port ${port}`)
 })

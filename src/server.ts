@@ -6,109 +6,111 @@ import {
   getAllUsers,
   getUser,
   updateUser,
-  UserResponse,
-  User,
 } from './data/users'
+import { Methods, StatusCodes, User, UserResponse } from './types'
 
 dotenv.config()
 
-const port = Number(process.env.PORT)
-const USERS_URL = '/api/users/'
-const USERS_URL_SHORT = '/api/users'
+const port = Number(process.env.PORT) || 5000
 
-enum method {
-  get = 'GET',
-  post = 'POST',
-  put = 'PUT',
-  delete = 'DELETE',
-}
+const USERS_URL = '/api/users'
+const USER_DETAILS_URL = '/api/users/'
 
-const server = http.createServer()
+const writeToResponse = (res: http.ServerResponse, data: UserResponse) => {
+  res.statusCode = data.code
 
-server.on('request', async (req, res) => {
-  console.log(`Connecting: ${req.method} ${req.url}`)
-
-  res.setHeader('Content-Type', 'application/json')
-  const { method: reqMethod, url: reqUrl } = req
-
-  if (
-    reqMethod === method.get &&
-    (reqUrl === USERS_URL || reqUrl === USERS_URL_SHORT)
-  ) {
-    const resData = getAllUsers()
-
-    return writeToResponse(res, resData)
-  } else if (reqMethod === method.get && reqUrl?.startsWith(USERS_URL)) {
-    const id = reqUrl.substring(USERS_URL.length)
-    const resData = getUser(id)
-
-    return writeToResponse(res, resData)
-  } else if (reqMethod === method.post && reqUrl?.startsWith(USERS_URL)) {
-    const user = await readRequestBody<User>(req)
-    const resData = addUser(user)
-
-    return writeToResponse(res, resData)
-  } else if (reqMethod === method.put && reqUrl?.startsWith(USERS_URL)) {
-    const id = reqUrl.substring(USERS_URL.length)
-    const user = await readRequestBody<Partial<User>>(req)
-    const resData = updateUser({ ...user, id })
-
-    return writeToResponse(res, resData)
-  } else if (reqMethod === method.delete && reqUrl?.startsWith(USERS_URL)) {
-    const id = reqUrl.substring(USERS_URL.length)
-    const resData = deleteUser(id)
-    
-    return writeToResponse(res, resData)
+  if (data.code.toString()[0] === '2') {
+    res.setHeader('Content-type', 'application/json')
+    res.write(JSON.stringify(data.data))
   } else {
-    return writeErrorResponse(
-      res,
-      'Failed to load resource: Not Found! :(',
-      404
-    )
+    res.setHeader('Content-type', 'text/plain')
+    res.write(data.data)
   }
-})
-
-async function readRequestBody<T>(req: http.IncomingMessage): Promise<T> {
-  return new Promise((resolve, reject) => {
-    let body = ''
-    req.on('data', (chunk) => (body += chunk))
-    req.on('end', () => {
-      try {
-        const parsedData = JSON.parse(body) as T
-        resolve(parsedData)
-      } catch (error) {
-        reject(error)
-      }
-    })
-  })
+  res.end()
 }
 
-function writeErrorResponse(
-  res: http.ServerResponse<http.IncomingMessage>,
+const writeErrorResponse = (
+  res: http.ServerResponse,
   message: string,
   code: number
-) {
+) => {
   res.statusCode = code
   res.setHeader('Content-Type', 'text/plain')
   res.write(message)
   res.end()
 }
 
-function writeToResponse(
-  res: http.ServerResponse<http.IncomingMessage>,
-  data: UserResponse
-) {
-  res.statusCode = data.code
-  if (data.code.toString()[0] === '2') {
-    res.setHeader('Content-Type', 'application/json')
-    res.write(JSON.stringify(data.data))
-  } else {
-    res.setHeader('Content-Type', 'text/plain')
-    res.write(data.data)
-  }
-  res.end()
-}
+const server = http.createServer()
 
-server.listen(port, () => {
+server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
+  try {
+    console.log(`Connecting: ${req.method} ${req.url}`)
+
+    res.setHeader('Content-Type', 'application/json')
+    const { method: reqMethod, url: reqUrl } = req
+
+    if (reqMethod === Methods.get && reqUrl === USERS_URL) {
+      //* Get All Users
+      const resData = getAllUsers()
+
+      writeToResponse(res, resData)
+    } else if (
+      reqMethod === Methods.get &&
+      reqUrl?.startsWith(USER_DETAILS_URL)
+    ) {
+      //* Get One User
+      const id = reqUrl.substring(USER_DETAILS_URL.length)
+      const resData = getUser(id)
+
+      writeToResponse(res, resData)
+    } else if (reqMethod === Methods.post && reqUrl === USERS_URL) {
+      //* Create New User
+      let body: string = ''
+      req.on('data', (chunk) => (body += chunk))
+      req.on('end', () => {
+        const resData = addUser(JSON.parse(body))
+        writeToResponse(res, resData)
+      })
+    } else if (
+      reqMethod === Methods.put &&
+      reqUrl?.startsWith(USER_DETAILS_URL)
+    ) {
+      //* Update User
+      let body: string = ''
+      req.on('data', (chunk) => (body += chunk))
+      req.on('end', () => {
+        const id = req.url?.substring(USER_DETAILS_URL.length)
+        const user = JSON.parse(body) as Partial<User>
+        user.id = id
+        const resData = updateUser(user)
+        writeToResponse(res, resData)
+      })
+    } else if (
+      reqMethod === Methods.delete &&
+      reqUrl?.startsWith(USER_DETAILS_URL)
+    ) {
+      //* Delete User
+      const id = reqUrl.substring(USER_DETAILS_URL.length)
+      const resData = deleteUser(id)
+
+      writeToResponse(res, resData)
+    } else {
+      //* Error Request
+      const msg = 'Oops! The resource you are looking for could not be found.'
+      writeErrorResponse(res, msg, StatusCodes.NotFound)
+    }
+  } catch (error) {
+    res.write(
+      JSON.stringify({
+        code: StatusCodes.InternalServerError,
+        message:
+          'Sorry, an internal server error has occurred. Please try again later',
+      })
+    )
+    res.end()
+  }
+})
+
+server.listen(port, 'localhost', () => {
   console.log(`Listening port ${port}`)
 })

@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv'
 import cluster, { Worker } from 'cluster'
 import http from 'http'
 import { cpus } from 'os'
-import { server } from './server'
+import { webServer } from './server'
 
 dotenv.config()
 
@@ -61,7 +61,7 @@ if (cluster.isPrimary) {
           : mainPort + 1
     }
   )
-  
+
   mainServer.listen(mainPort, 'localhost', () => {
     console.log(`Main server listening on port ${mainPort}`)
   })
@@ -69,7 +69,11 @@ if (cluster.isPrimary) {
 
 if (cluster.isWorker) {
   const workerPort = parseInt(process.env.PORT || '5000') + cluster.worker!.id
+  const server = http.createServer(webServer)
   server.listen(workerPort, 'localhost', () => {
     console.log(`Worker process is started! Listening on port ${workerPort}`)
   })
+  server.on('connection', (socket) =>
+    console.log(`Connecting in port: ${socket.localPort}`)
+  )
 }

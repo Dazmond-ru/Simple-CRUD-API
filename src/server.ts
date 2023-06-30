@@ -35,11 +35,12 @@ const writeErrorResponse = (
   res.end()
 }
 
-export const server = http.createServer()
-
-server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
+export const webServer = (
+  req: http.IncomingMessage,
+  res: http.ServerResponse
+) => {
   try {
-    console.log(`Connecting: ${req.method} ${req.url}`)
+    console.log(`Method: ${req.method} Url: ${req.url}`)
 
     res.setHeader('Content-Type', 'application/json')
     const { method: reqMethod, url: reqUrl } = req
@@ -104,4 +105,4 @@ server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
     )
     res.end()
   }
-})
+}

@@ -31,13 +31,23 @@ export function getUser(id: string): UserResponse {
 
 export function addUser(user: Partial<User>): UserResponse {
   user.id = uuidV4()
-  if (!user.username || !user.username.trim() || !user.age) {
+
+  const isCorrectHobbies =
+    user.hobbies instanceof Array &&
+    (user.hobbies.length === 0 ||
+      user.hobbies.every((hobby) => typeof hobby === 'string'))
+
+  if (
+    !(typeof user.username === 'string') ||
+    !user.username.trim() ||
+    !(typeof user.age === 'number') ||
+    !isCorrectHobbies
+  ) {
     return {
       code: StatusCodes.BadRequest,
-      data: 'Invalid input! Please make sure you have provided a valid username and age.',
+      data: 'Invalid input! Please make sure you have provided a valid username, age and hobbies.',
     }
   }
-  if (!user.hobbies) user.hobbies = []
   users.push(user as User)
   return { code: StatusCodes.Created, data: user as User }
 }
@@ -49,16 +59,20 @@ export function updateUser(user: Partial<User>): UserResponse {
       data: 'Invalid ID! Please check the input value and try again.',
     }
   }
-  const i = users.findIndex((_user) => _user.id == user.id)
-  if (i < 0)
+  const idx = users.findIndex((_user) => _user.id == user.id)
+  if (idx < 0)
     return {
       code: StatusCodes.NotFound,
       data: 'User not found! Please make sure you have entered a valid ID.',
     }
-  if (user.username) users[i].username = user.username
-  if (user.age) users[i].age = user.age
-  if (user.hobbies) users[i].hobbies = user.hobbies
-  return { code: StatusCodes.OK, data: users[i] }
+  if (typeof user.username == 'string') users[idx].username = user.username
+  if (typeof user.age == 'number') users[idx].age = user.age
+  if (user.hobbies instanceof Array) {
+    user.hobbies.forEach((hobby) => {
+      if (!user.hobbies.includes(hobby)) this.users[idx].hobbies.push(hobby)
+    })
+  }
+  return { code: StatusCodes.OK, data: users[idx] }
 }
 
 export function deleteUser(id: string): UserResponse {
@@ -68,13 +82,13 @@ export function deleteUser(id: string): UserResponse {
       data: 'Invalid ID! Please check the input value and try again.',
     }
   }
-  const i = users.findIndex((user) => user.id == id)
-  if (i < 0)
+  const idx = users.findIndex((user) => user.id == id)
+  if (idx < 0)
     return {
       code: StatusCodes.NotFound,
       data: 'User not found! Please make sure you have entered a valid ID.',
     }
-  const user = users[i]
-  users.splice(i, 1)
+  const user = users[idx]
+  users.splice(idx, 1)
   return { code: StatusCodes.NoContent, data: user }
 }

@@ -35,15 +35,16 @@ const writeErrorResponse = (
   res.end()
 }
 
-export const webServer = (
+export const webServer = async (
   req: http.IncomingMessage,
   res: http.ServerResponse
 ) => {
   try {
+    const { method: reqMethod, url: reqUrl } = req
+
     console.log(`Method: ${req.method} Url: ${req.url}`)
 
     res.setHeader('Content-Type', 'application/json')
-    const { method: reqMethod, url: reqUrl } = req
 
     if (reqMethod === Methods.get && reqUrl === USERS_URL) {
       //* Get All Users

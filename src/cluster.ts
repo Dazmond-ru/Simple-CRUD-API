@@ -7,6 +7,7 @@ import { webServer } from './server'
 dotenv.config()
 
 const mainPort = Number(process.env.PORT) || 5000
+const host = process.env.HOST || 'localhost'
 const numCPUs = cpus().length
 
 if (cluster.isPrimary) {
@@ -62,7 +63,7 @@ if (cluster.isPrimary) {
     }
   )
 
-  mainServer.listen(mainPort, 'localhost', () => {
+  mainServer.listen(mainPort, host, () => {
     console.log(`Main server listening on port ${mainPort}`)
   })
 }
@@ -70,7 +71,7 @@ if (cluster.isPrimary) {
 if (cluster.isWorker) {
   const workerPort = parseInt(process.env.PORT || '5000') + cluster.worker!.id
   const server = http.createServer(webServer)
-  server.listen(workerPort, 'localhost', () => {
+  server.listen(workerPort, host, () => {
     console.log(`Worker process is started! Listening on port ${workerPort}`)
   })
   server.on('connection', (socket) =>

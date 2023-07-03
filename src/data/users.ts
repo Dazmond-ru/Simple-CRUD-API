@@ -69,7 +69,7 @@ export function updateUser(user: Partial<User>): UserResponse {
   if (typeof user.age == 'number') users[idx].age = user.age
   if (user.hobbies instanceof Array) {
     user.hobbies.forEach((hobby) => {
-      if (!user.hobbies.includes(hobby)) this.users[idx].hobbies.push(hobby)
+      if (!user.hobbies.includes(hobby)) users[idx].hobbies.push(hobby)
     })
   }
   return { code: StatusCodes.OK, data: users[idx] }

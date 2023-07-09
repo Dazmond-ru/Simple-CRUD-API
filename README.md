@@ -1,6 +1,8 @@
 # Simple-CRUD-API
 
-Install packages
+### Rename "one.env" to ".env"
+
+### Install packages
 ```
 npm install
 ```

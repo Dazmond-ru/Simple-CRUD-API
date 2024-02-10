@@ -57,14 +57,14 @@ export function addUser(user: Partial<User>): UserResponse {
     return { code: StatusCodes.Created, data: user as User }
 }
 
-export function updateUser(user: Partial<User>): UserResponse {
-    if (!user.id || !uuidValidate(user.id)) {
+export function updateUser(newUser: Partial<User>): UserResponse {
+    if (!newUser.id || !uuidValidate(newUser.id)) {
         return {
             code: StatusCodes.BadRequest,
             data: 'Invalid ID! Please check the input value and try again.',
         }
     }
-    const idx = users.findIndex((_user) => _user.id == user.id)
+    const idx = users.findIndex((user) => user.id == newUser.id)
     if (idx < 0) {
         return {
             code: StatusCodes.NotFound,
@@ -72,14 +72,44 @@ export function updateUser(user: Partial<User>): UserResponse {
         }
     }
 
-    if (typeof user.username == 'string') users[idx].username = user.username
+    if (Object.keys(newUser).some(key => !['id', 'username', 'age', 'hobbies'].includes(key))) {
+        return {
+            code: StatusCodes.BadRequest,
+            data: 'Invalid field! Only username, age, and hobbies are allowed for update.',
+        }
+    }
 
-    if (typeof user.age == 'number') users[idx].age = user.age
+    if (newUser.username){
+        if (typeof newUser.username === 'string') {
+            users[idx].username = newUser.username
+        } else {
+            return {
+                code: StatusCodes.BadRequest,
+                data: 'Invalid username! Please provide a valid string value for username.'
+            }
+        }
+    }
 
-    if (user.hobbies instanceof Array) {
-        user.hobbies.forEach((hobby) => {
-            if (!user.hobbies.includes(hobby)) users[idx].hobbies.push(hobby)
-        })
+    if (newUser.age){
+        if (typeof newUser.age === 'number') {
+            users[idx].age = newUser.age
+        } else {
+            return {
+                code: StatusCodes.BadRequest,
+                data: 'Invalid age! Please provide a valid number value for age.',
+            }
+        }
+    }
+
+    if (newUser.hobbies){
+        if (newUser.hobbies instanceof Array && newUser.hobbies.every((hobby) => typeof hobby === 'string')) {
+            if (newUser.hobbies.length) users[idx].hobbies = newUser.hobbies
+        } else {
+            return {
+                code: StatusCodes.BadRequest,
+                data: 'Invalid hobbies! Please provide a valid array of strings for hobbies.',
+            }
+        }
     }
 
     return { code: StatusCodes.OK, data: users[idx] }

@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 901:
+/***/ 420:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -42,13 +42,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const dotenv = __importStar(__webpack_require__(142));
-const cluster_1 = __importDefault(__webpack_require__(1));
-const http_1 = __importDefault(__webpack_require__(685));
-const os_1 = __webpack_require__(37);
-const server_1 = __webpack_require__(728);
+const dotenv = __importStar(__webpack_require__(520));
+const cluster_1 = __importDefault(__webpack_require__(840));
+const http_1 = __importDefault(__webpack_require__(136));
+const os_1 = __webpack_require__(558);
+const server_1 = __webpack_require__(652);
 dotenv.config();
 const mainPort = Number(process.env.PORT) || 5000;
+const host = process.env.HOST || 'localhost';
 const numCPUs = (0, os_1.cpus)().length;
 if (cluster_1.default.isPrimary) {
     console.log(`Master process is started! Number of CPU cores: ${numCPUs}`);
@@ -89,14 +90,14 @@ if (cluster_1.default.isPrimary) {
                 ? activeWorkerPort + 1
                 : mainPort + 1;
     }));
-    mainServer.listen(mainPort, 'localhost', () => {
+    mainServer.listen(mainPort, host, () => {
         console.log(`Main server listening on port ${mainPort}`);
     });
 }
 if (cluster_1.default.isWorker) {
     const workerPort = parseInt(process.env.PORT || '5000') + cluster_1.default.worker.id;
     const server = http_1.default.createServer(server_1.webServer);
-    server.listen(workerPort, 'localhost', () => {
+    server.listen(workerPort, host, () => {
         console.log(`Worker process is started! Listening on port ${workerPort}`);
     });
     server.on('connection', (socket) => console.log(`Connecting in port: ${socket.localPort}`));
@@ -105,13 +106,13 @@ if (cluster_1.default.isWorker) {
 
 /***/ }),
 
-/***/ 343:
+/***/ 291:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deleteUser = exports.updateUser = exports.addUser = exports.getUser = exports.getAllUsers = void 0;
-const uuid_1 = __webpack_require__(828);
+const uuid_1 = __webpack_require__(104);
 const users = [];
 function getAllUsers() {
     return {
@@ -128,11 +129,12 @@ function getUser(id) {
         };
     }
     const user = users.find((user) => user.id == id);
-    if (!user)
+    if (!user) {
         return {
             code: 404 /* StatusCodes.NotFound */,
             data: 'User not found! Please make sure you have entered a valid ID.',
         };
+    }
     return {
         code: 200 /* StatusCodes.OK */,
         data: user,
@@ -165,11 +167,12 @@ function updateUser(user) {
         };
     }
     const idx = users.findIndex((_user) => _user.id == user.id);
-    if (idx < 0)
+    if (idx < 0) {
         return {
             code: 404 /* StatusCodes.NotFound */,
             data: 'User not found! Please make sure you have entered a valid ID.',
         };
+    }
     if (typeof user.username == 'string')
         users[idx].username = user.username;
     if (typeof user.age == 'number')
@@ -177,7 +180,7 @@ function updateUser(user) {
     if (user.hobbies instanceof Array) {
         user.hobbies.forEach((hobby) => {
             if (!user.hobbies.includes(hobby))
-                this.users[idx].hobbies.push(hobby);
+                users[idx].hobbies.push(hobby);
         });
     }
     return { code: 200 /* StatusCodes.OK */, data: users[idx] };
@@ -191,11 +194,12 @@ function deleteUser(id) {
         };
     }
     const idx = users.findIndex((user) => user.id == id);
-    if (idx < 0)
+    if (idx < 0) {
         return {
             code: 404 /* StatusCodes.NotFound */,
             data: 'User not found! Please make sure you have entered a valid ID.',
         };
+    }
     const user = users[idx];
     users.splice(idx, 1);
     return { code: 204 /* StatusCodes.NoContent */, data: user };
@@ -205,14 +209,23 @@ exports.deleteUser = deleteUser;
 
 /***/ }),
 
-/***/ 728:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ 652:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.webServer = void 0;
-const users_1 = __webpack_require__(343);
-const types_1 = __webpack_require__(230);
+const users_1 = __webpack_require__(291);
+const types_1 = __webpack_require__(76);
 const USERS_URL = '/api/users';
 const USER_DETAILS_URL = '/api/users/';
 const writeToResponse = (res, data) => {
@@ -233,11 +246,11 @@ const writeErrorResponse = (res, message, code) => {
     res.write(message);
     res.end();
 };
-const webServer = (req, res) => {
+const webServer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { method: reqMethod, url: reqUrl } = req;
         console.log(`Method: ${req.method} Url: ${req.url}`);
         res.setHeader('Content-Type', 'application/json');
-        const { method: reqMethod, url: reqUrl } = req;
         if (reqMethod === types_1.Methods.get && reqUrl === USERS_URL) {
             //* Get All Users
             const resData = (0, users_1.getAllUsers)();
@@ -293,18 +306,18 @@ const webServer = (req, res) => {
         }));
         res.end();
     }
-};
+});
 exports.webServer = webServer;
 
 
 /***/ }),
 
-/***/ 230:
+/***/ 76:
 /***/ ((__unused_webpack_module, exports) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MessageMethod = exports.Methods = void 0;
+exports.Methods = void 0;
 var Methods;
 (function (Methods) {
     Methods["get"] = "GET";
@@ -312,47 +325,39 @@ var Methods;
     Methods["put"] = "PUT";
     Methods["delete"] = "DELETE";
 })(Methods || (exports.Methods = Methods = {}));
-var MessageMethod;
-(function (MessageMethod) {
-    MessageMethod["getAllUsers"] = "getAllUsers";
-    MessageMethod["getUser"] = "getUser";
-    MessageMethod["addUser"] = "addUser";
-    MessageMethod["updateUser"] = "updateUser";
-    MessageMethod["deleteUser"] = "deleteUser";
-})(MessageMethod || (exports.MessageMethod = MessageMethod = {}));
 
 
 /***/ }),
 
-/***/ 142:
+/***/ 520:
 /***/ ((module) => {
 
 module.exports = require("dotenv");
 
 /***/ }),
 
-/***/ 828:
+/***/ 104:
 /***/ ((module) => {
 
 module.exports = require("uuid");
 
 /***/ }),
 
-/***/ 1:
+/***/ 840:
 /***/ ((module) => {
 
 module.exports = require("cluster");
 
 /***/ }),
 
-/***/ 685:
+/***/ 136:
 /***/ ((module) => {
 
 module.exports = require("http");
 
 /***/ }),
 
-/***/ 37:
+/***/ 558:
 /***/ ((module) => {
 
 module.exports = require("os");
@@ -390,7 +395,7 @@ module.exports = require("os");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__(901);
+/******/ 	var __webpack_exports__ = __webpack_require__(420);
 /******/ 	
 /******/ })()
 ;

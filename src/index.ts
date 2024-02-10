@@ -1,7 +1,11 @@
+import * as dotenv from 'dotenv'
 import http from 'http'
 import { webServer } from './server'
 
+dotenv.config()
+
 const mainPort = Number(process.env.PORT) || 5000
+
 const host = process.env.HOST || 'localhost'
 
 export const server = http.createServer(webServer)

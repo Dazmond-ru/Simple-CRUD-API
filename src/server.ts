@@ -65,8 +65,16 @@ export const webServer = async (
             let body: string = ''
             req.on('data', (chunk) => (body += chunk))
             req.on('end', () => {
-                const resData = addUser(JSON.parse(body))
-                writeToResponse(res, resData)
+                try {
+                    const resData = addUser(JSON.parse(body))
+                    writeToResponse(res, resData)
+                } catch (error) {
+                    writeErrorResponse(
+                        res,
+                        'Invalid JSON format',
+                        StatusCodes.BadRequest
+                    )
+                }
             })
         } else if (
             reqMethod === Methods.put &&
@@ -76,11 +84,19 @@ export const webServer = async (
             let body: string = ''
             req.on('data', (chunk) => (body += chunk))
             req.on('end', () => {
-                const id = req.url?.substring(USER_DETAILS_URL.length)
-                const user = JSON.parse(body) as Partial<User>
-                user.id = id
-                const resData = updateUser(user)
-                writeToResponse(res, resData)
+                try {
+                    const id = req.url?.substring(USER_DETAILS_URL.length)
+                    const user = JSON.parse(body) as Partial<User>
+                    user.id = id
+                    const resData = updateUser(user)
+                    writeToResponse(res, resData)
+                } catch (error) {
+                    writeErrorResponse(
+                        res,
+                        'Invalid JSON format',
+                        StatusCodes.BadRequest
+                    )
+                }
             })
         } else if (
             reqMethod === Methods.delete &&

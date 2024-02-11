@@ -147,12 +147,12 @@ export const webServer = async (
         res.end()
     }
 
-    // if (cluster.isWorker) {
-    //     const data: UserResponse = await new Promise((resolve) => {
-    //         process.on('message', (data: UserResponse) => {
-    //             resolve(data)
-    //         })
-    //     })
-    //     writeToResponse(res, data)
-    // }
+    if (cluster.isWorker) {
+        const data: UserResponse = await new Promise((resolve) => {
+            process.on('message', (data: UserResponse) => {
+                resolve(data)
+            })
+        })
+        writeToResponse(res, data)
+    }
 }

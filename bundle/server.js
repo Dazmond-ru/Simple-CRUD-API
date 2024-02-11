@@ -2,6 +2,129 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 420:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const dotenv = __importStar(__webpack_require__(520));
+const cluster_1 = __importDefault(__webpack_require__(840));
+const http_1 = __importDefault(__webpack_require__(136));
+const os_1 = __webpack_require__(558);
+const server_1 = __webpack_require__(652);
+const handler_1 = __webpack_require__(836);
+dotenv.config();
+const mainPort = Number(process.env.PORT) || 5000;
+const host = process.env.HOST || 'localhost';
+const numCPUs = (0, os_1.cpus)().length;
+if (cluster_1.default.isPrimary) {
+    console.log(`Master process is started! Number of CPU cores: ${numCPUs}`);
+    const workers = [];
+    for (let i = 0; i < (0, os_1.cpus)().length; i++) {
+        const workerEnv = { port: (mainPort + i + 1).toString() };
+        const newWorker = () => {
+            const worker = cluster_1.default.fork(workerEnv);
+            worker.on('message', message => {
+                worker.send((0, handler_1.messageHandler)(message));
+            });
+            worker.on('exit', (code) => {
+                if (code !== 0) {
+                    workers[i] = newWorker();
+                }
+            });
+            return worker;
+        };
+        const worker = newWorker();
+        workers.push(worker);
+    }
+    let activeWorkerPort = mainPort + 1;
+    const mainServer = http_1.default.createServer((request, response) => __awaiter(void 0, void 0, void 0, function* () {
+        const httpRequest = http_1.default.request({
+            hostname: 'localhost',
+            port: activeWorkerPort,
+            path: request.url,
+            method: request.method,
+            headers: request.headers,
+        }, (res) => {
+            const data = [];
+            res.on('data', (chunk) => {
+                data.push(chunk);
+            });
+            res.on('end', () => {
+                if (response.statusCode === 200 || response.statusCode === 201) {
+                    response.setHeader('Content-type', 'application/json');
+                }
+                response.write(data.join().toString());
+                response.end();
+            });
+        });
+        const data = [];
+        request.on('data', (chunk) => {
+            data.push(chunk);
+        });
+        request.on('end', () => {
+            if (response.statusCode === 200 || response.statusCode === 201) {
+                response.setHeader('Content-type', 'application/json');
+            }
+            httpRequest.write(data.join().toString());
+            httpRequest.end();
+        });
+        activeWorkerPort =
+            activeWorkerPort < mainPort + (0, os_1.cpus)().length
+                ? activeWorkerPort + 1
+                : mainPort + 1;
+    }));
+    mainServer.listen(mainPort, host, () => {
+        console.log(`Main server listening on port ${mainPort}`);
+    });
+}
+if (cluster_1.default.isWorker) {
+    const workerPort = parseInt(process.env.PORT || '5000') + cluster_1.default.worker.id;
+    const server = http_1.default.createServer(server_1.webServer);
+    server.listen(workerPort, host, () => {
+        console.log(`Worker process is started! Listening on port ${workerPort}`);
+    });
+    server.on('connection', (socket) => console.log(`Connecting in port: ${socket.localPort}`));
+}
+
+
+/***/ }),
+
 /***/ 836:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
@@ -162,53 +285,6 @@ exports.deleteUser = deleteUser;
 
 /***/ }),
 
-/***/ 740:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.server = void 0;
-const dotenv = __importStar(__webpack_require__(520));
-const http_1 = __importDefault(__webpack_require__(136));
-const server_1 = __webpack_require__(652);
-dotenv.config();
-const mainPort = Number(process.env.PORT) || 5000;
-const host = process.env.HOST || 'localhost';
-exports.server = http_1.default.createServer(server_1.webServer);
-exports.server.listen(mainPort, host, () => {
-    console.log(`Server is started! Listening on port ${mainPort}`);
-});
-exports.server.on('connection', (socket) => console.log(`Connecting in port: ${socket.localPort}`));
-
-
-/***/ }),
-
 /***/ 652:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -355,14 +431,14 @@ const webServer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }));
         res.end();
     }
-    // if (cluster.isWorker) {
-    //     const data: UserResponse = await new Promise((resolve) => {
-    //         process.on('message', (data: UserResponse) => {
-    //             resolve(data)
-    //         })
-    //     })
-    //     writeToResponse(res, data)
-    // }
+    if (cluster_1.default.isWorker) {
+        const data = yield new Promise((resolve) => {
+            process.on('message', (data) => {
+                resolve(data);
+            });
+        });
+        writeToResponse(res, data);
+    }
 });
 exports.webServer = webServer;
 
@@ -412,6 +488,13 @@ module.exports = require("cluster");
 
 module.exports = require("http");
 
+/***/ }),
+
+/***/ 558:
+/***/ ((module) => {
+
+module.exports = require("os");
+
 /***/ })
 
 /******/ 	});
@@ -445,7 +528,7 @@ module.exports = require("http");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__(740);
+/******/ 	var __webpack_exports__ = __webpack_require__(420);
 /******/ 	
 /******/ })()
 ;

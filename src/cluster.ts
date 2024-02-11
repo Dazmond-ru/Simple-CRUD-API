@@ -3,7 +3,7 @@ import cluster, { Worker } from 'cluster'
 import http from 'http'
 import { cpus } from 'os'
 import { webServer } from './server'
-import {messageHandler} from "./data/handler";
+import { messageHandler } from './data/handler'
 
 dotenv.config()
 
@@ -19,19 +19,19 @@ if (cluster.isPrimary) {
     for (let i = 0; i < cpus().length; i++) {
         const workerEnv = { port: (mainPort + i + 1).toString() }
         const newWorker = () => {
-            const worker = cluster.fork(workerEnv);
-            worker.on('message', message => {
-                worker.send(messageHandler(message));
-            });
+            const worker = cluster.fork(workerEnv)
+            worker.on('message', (message) => {
+                worker.send(messageHandler(message))
+            })
             worker.on('exit', (code) => {
                 if (code !== 0) {
-                    workers[i] = newWorker();
+                    workers[i] = newWorker()
                 }
-            });
-            return worker;
+            })
+            return worker
         }
-        const worker = newWorker();
-        workers.push(worker);
+        const worker = newWorker()
+        workers.push(worker)
     }
 
     let activeWorkerPort = mainPort + 1
@@ -55,8 +55,14 @@ if (cluster.isPrimary) {
                         data.push(chunk)
                     })
                     res.on('end', () => {
-                        if (response.statusCode === 200 || response.statusCode === 201) {
-                            response.setHeader('Content-type', 'application/json');
+                        if (
+                            response.statusCode === 200 ||
+                            response.statusCode === 201
+                        ) {
+                            response.setHeader(
+                                'Content-type',
+                                'application/json'
+                            )
                         }
                         response.write(data.join().toString())
                         response.end()
@@ -70,8 +76,11 @@ if (cluster.isPrimary) {
             })
 
             request.on('end', () => {
-                if (response.statusCode === 200 || response.statusCode === 201) {
-                    response.setHeader('Content-type', 'application/json');
+                if (
+                    response.statusCode === 200 ||
+                    response.statusCode === 201
+                ) {
+                    response.setHeader('Content-type', 'application/json')
                 }
                 httpRequest.write(data.join().toString())
                 httpRequest.end()

@@ -1,0 +1,42 @@
+{
+  "name": "simple-crud-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "start:dev": "npx nodemon ./src/index.ts",
+    "start:prod": "webpack && node ./bundle/server.js",
+    "start:multi": "cross-env NODE_ENV=cluster webpack && node ./bundle/server.js",
+    "test": "jest --silent"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dazmond-ru/Simple-CRUD-API.git"
+  },
+  "author": "Dazmond-ru",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dazmond-ru/Simple-CRUD-API/issues"
+  },
+  "homepage": "https://github.com/Dazmond-ru/Simple-CRUD-API#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.17",
+    "@types/supertest": "^6.0.2",
+    "@types/uuid": "^9.0.8",
+    "@types/webpack-node-externals": "^3.0.4",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.2",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.3",
+    "supertest": "^6.3.4",
+    "ts-loader": "^9.5.1",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "uuid": "^9.0.1",
+    "webpack": "^5.90.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-node-externals": "^3.0.0"
+  }
+}

@@ -72,25 +72,29 @@ export function updateUser(newUser: Partial<User>): UserResponse {
         }
     }
 
-    if (Object.keys(newUser).some(key => !['id', 'username', 'age', 'hobbies'].includes(key))) {
+    if (
+        Object.keys(newUser).some(
+            (key) => !['id', 'username', 'age', 'hobbies'].includes(key)
+        )
+    ) {
         return {
             code: StatusCodes.BadRequest,
             data: 'Invalid field! Only username, age, and hobbies are allowed for update.',
         }
     }
 
-    if (newUser.username){
+    if (newUser.username) {
         if (typeof newUser.username === 'string') {
             users[idx].username = newUser.username
         } else {
             return {
                 code: StatusCodes.BadRequest,
-                data: 'Invalid username! Please provide a valid string value for username.'
+                data: 'Invalid username! Please provide a valid string value for username.',
             }
         }
     }
 
-    if (newUser.age){
+    if (newUser.age) {
         if (typeof newUser.age === 'number') {
             users[idx].age = newUser.age
         } else {
@@ -101,8 +105,11 @@ export function updateUser(newUser: Partial<User>): UserResponse {
         }
     }
 
-    if (newUser.hobbies){
-        if (newUser.hobbies instanceof Array && newUser.hobbies.every((hobby) => typeof hobby === 'string')) {
+    if (newUser.hobbies) {
+        if (
+            newUser.hobbies instanceof Array &&
+            newUser.hobbies.every((hobby) => typeof hobby === 'string')
+        ) {
             if (newUser.hobbies.length) users[idx].hobbies = newUser.hobbies
         } else {
             return {

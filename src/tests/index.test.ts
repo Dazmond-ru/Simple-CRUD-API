@@ -11,7 +11,7 @@ const mockUser = {
     hobbies: ['wallcrawling', 'web-spinning'],
 }
 
-describe('Getting endpoint data', () => {
+describe('Scenario 1 - Getting endpoint data', () => {
     it('Get all users', async () => {
         const res = await request(server).get(BASE_URL)
 
@@ -77,7 +77,7 @@ describe('Getting endpoint data', () => {
     })
 })
 
-describe('Endpoints error testing', () => {
+describe('Scenario 2 - Endpoints error testing', () => {
     it('Invalid endpoint', async () => {
         const response = await request(server).get('/api/member')
 
@@ -119,7 +119,7 @@ describe('Endpoints error testing', () => {
     })
 })
 
-describe('Get errors by invalid post data', () => {
+describe('Scenario 3 - Get errors by invalid post data', () => {
     afterAll(() => {
         server.close()
     })
@@ -127,7 +127,7 @@ describe('Get errors by invalid post data', () => {
     it('Create user with invalid input', async () => {
         const invalidUserData = {
             username: 'Superman',
-            age: 'forever young'
+            age: 'forever young',
         }
         const response = await request(server)
             .post(BASE_URL)
@@ -139,31 +139,29 @@ describe('Get errors by invalid post data', () => {
         )
     })
 
-        it('Put user with invalid data', async () => {
-            const { body: newUser } = await request(server)
-                .post(BASE_URL)
-                .send(mockUser)
+    it('Put user with invalid data', async () => {
+        const { body: newUser } = await request(server)
+            .post(BASE_URL)
+            .send(mockUser)
 
-            const id = newUser.id
+        const { body: currentUser } = await request(server).get(
+            `${BASE_URL}/${newUser.id}`
+        )
 
-            const { body: currentUser } = await request(server).get(
-                `${BASE_URL}/${id}`
-            )
+        expect(currentUser).toEqual(newUser)
 
-            expect(currentUser).toEqual(newUser)
+        const invalidUserData = {
+            name: 'Superman',
+            age: 'forever young',
+        }
 
-            const invalidUserData = {
-                name: 'Superman',
-                age: 'forever young'
-            }
+        const response = await request(server)
+            .put(`${BASE_URL}/${newUser.id}`)
+            .send(invalidUserData)
 
-            const response = await request(server)
-                .put(`${BASE_URL}/${id}`)
-                .send(invalidUserData)
-
-            expect(response.status).toBe(StatusCodes.BadRequest)
-            expect(response.text).toBe(
-                'Invalid field! Only username, age, and hobbies are allowed for update.'
-            )
-        })
+        expect(response.status).toBe(StatusCodes.BadRequest)
+        expect(response.text).toBe(
+            'Invalid field! Only username, age, and hobbies are allowed for update.'
+        )
+    })
 })
